@@ -1,35 +1,28 @@
 import { faker } from "@faker-js/faker";
-import prisma from "../src/lib/prisma/client";
+import prisma from "../src/app/lib/prisma/client";
 
-async function main() {
-  const parkings = [];
+export default async function seed() {
+  async function main() {
+    const parkings = [];
 
-  for (let i = 0; i < 10; i++) {
-    parkings.push({
-      name: faker.company.name() + " Parking",
-      address: faker.address.streetAddress(),
-      latitude: parseFloat(faker.address.latitude()),
-      longitude: parseFloat(faker.address.longitude()),
-      totalPlaces: faker.datatype.number({ min: 50, max: 200 }),
-      freePlaces: faker.datatype.number({ min: 0, max: 50 }),
-      price: parseFloat(faker.commerce.price(1, 20, 2)),
-      rating: parseFloat(
-        faker.datatype.number({ min: 1, max: 5, precision: 0.1 }).toFixed(1)
-      ),
-      photoUrl: faker.image.imageUrl(),
-      description: faker.lorem.sentence(),
-    });
+    for (let i = 0; i < 10; i++) {
+      parkings.push({
+        name: faker.company.name() + " Parking",
+        address: faker.location.street(),
+        latitude: faker.location.latitude(),
+        longitude: faker.location.longitude(),
+        totalPlaces: faker.number.int({ min: 50, max: 200 }),
+        freePlaces: faker.number.int({ min: 0, max: 50 }),
+        price: parseFloat(faker.commerce.price({ min: 1, max: 20, dec: 2 })),
+        rating: parseFloat(
+          faker.number.float({ min: 1, max: 5, fractionDigits: 1 }).toFixed(1)
+        ),
+        photoUrl: faker.image.url(),
+        description: faker.lorem.sentence(),
+      });
+    }
+
+    await prisma.parking.createMany({ data: parkings });
+    console.log("Database seeded with parking data.");
   }
-
-  await prisma.parking.createMany({ data: parkings });
-  console.log("Database seeded with parking data.");
 }
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
