@@ -39,8 +39,6 @@ model Reservation {
   id        String   @id @default(cuid())
   parkingId Int
   userId    Int
-  startDate DateTime
-  endDate   DateTime
   startTime DateTime
   endTime   DateTime
   parking   Parking  @relation("ParkingReservations", fields: [parkingId], references: [id])
