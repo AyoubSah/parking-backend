@@ -6,7 +6,7 @@ export default async function seed() {
 
   for (let i = 0; i < 10; i++) {
     parkings.push({
-      name: faker.company.name() + " Parking",
+      parkingName: faker.company.name() + " Parking",
       address: faker.location.street(),
       latitude: faker.location.latitude(),
       longitude: faker.location.longitude(),
@@ -20,6 +20,7 @@ export default async function seed() {
       description: faker.lorem.sentence(),
     });
   }
+  console.log(parkings[1]);
 
   await prisma.parking.createMany({ data: parkings });
   console.log("Database seeded with parking data.");

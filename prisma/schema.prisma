@@ -19,7 +19,7 @@ model User {
 
 model Parking {
   id          Int      @id @default(autoincrement())
-  name        String   @unique
+  parkingName String   @unique
   address     String
   latitude    Float
   longitude   Float
@@ -30,9 +30,9 @@ model Parking {
   photoUrl    String
   description String
 
-  reservations Reservation[] @relation("ParkingReservations")
+  reservations   Reservation[] @relation("ParkingReservations")
 
-  @@index([name])
+  @@index([parkingName])
 }
 
 model Reservation {
@@ -40,10 +40,9 @@ model Reservation {
   parkingId Int
   userId    Int
   startDate DateTime
-  endDate   DateTime // Added endDate to track the reservation period
-  startTime DateTime // Added new field: start time of reservation
-  endTime   DateTime // Added new field: end time of reservation
+  endDate   DateTime
+  startTime DateTime
+  endTime   DateTime
   parking   Parking  @relation("ParkingReservations", fields: [parkingId], references: [id])
   driver    User     @relation("UserReservations", fields: [userId], references: [id])
-
 }

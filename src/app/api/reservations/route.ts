@@ -14,7 +14,6 @@ export async function POST(request: Request) {
     const user = await getUserFromToken(token);
     if (!user)
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-
     // Validate date and time ranges
     if (new Date(startDate) >= new Date(endDate)) {
       return NextResponse.json(
@@ -29,7 +28,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create the reservation entry
+    // Create the reservation entry with parking details
     const reservation = await prisma.reservation.create({
       data: {
         parkingId,
@@ -39,10 +38,20 @@ export async function POST(request: Request) {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
       },
+      include: {
+        parking: {
+          select: {
+            parkingName: true,
+            photoUrl: true,
+            address: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(reservation);
   } catch (error) {
+    console.log(error);
     return NextResponse.json({ error: error }, { status: 500 });
   }
 }

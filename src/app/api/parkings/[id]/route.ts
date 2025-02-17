@@ -5,28 +5,55 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const parking = await prisma.parking.findUnique({
-    where: { id: parseInt(params.id) },
-  });
-  return NextResponse.json(parking);
+  try {
+    const id = parseInt(params.id);
+    if (isNaN(id))
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    const parking = await prisma.parking.findUnique({ where: { id } });
+    if (!parking)
+      return NextResponse.json({ error: "Parking not found" }, { status: 404 });
+    return NextResponse.json(parking);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const data = await request.json();
-  const parking = await prisma.parking.update({
-    where: { id: parseInt(params.id) },
-    data,
-  });
-  return NextResponse.json(parking);
+  try {
+    const id = parseInt(params.id);
+    if (isNaN(id))
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    const data = await request.json();
+    const parking = await prisma.parking.update({
+      where: { id },
+      data,
+    });
+    return NextResponse.json(parking);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  await prisma.parking.delete({ where: { id: parseInt(params.id) } });
-  return NextResponse.json({ message: "Parking deleted" });
+  try {
+    const id = parseInt(params.id);
+    if (isNaN(id))
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    await prisma.parking.delete({ where: { id } });
+    return NextResponse.json({ message: "Parking deleted" });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
