@@ -9,9 +9,8 @@ export async function GET() {
     }
     return NextResponse.json(parkings);
   } catch (error) {
-    console.error("Error fetching parkings:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: (error as any).message },
       { status: 500 }
     );
   }
