@@ -12,7 +12,20 @@ export async function GET(
     const parking = await prisma.parking.findUnique({ where: { id } });
     if (!parking)
       return NextResponse.json({ error: "Parking not found" }, { status: 404 });
-    return NextResponse.json(parking);
+    
+    const now = new Date();
+    const activeReservations = await prisma.reservation.count({
+      where: {
+        parkingId: id,
+        startTime: { lte: now },
+        endTime: { gte: now }
+      }
+    });
+    const parkingWithFreePlaces = {
+      ...parking,
+      freePlaces: parking.totalPlaces - activeReservations
+    };
+    return NextResponse.json(parkingWithFreePlaces);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Internal server error";

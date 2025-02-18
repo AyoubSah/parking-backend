@@ -7,10 +7,8 @@ export async function POST(request: Request) {
   let email: string | null = null;
   let password: string | null = null;
   let fullName: string | null = null;
-  console.log("content type: ", contentType);
   if (contentType.includes("application/json")) {
     try {
-      console.log("json");
       const body = (await request.json()) || {};
       email = body.email;
       password = body.password;
@@ -22,7 +20,6 @@ export async function POST(request: Request) {
       );
     }
   } else {
-    console.log("form");
     const bodyText = await request.text();
     const params = new URLSearchParams(bodyText);
     email = params.get("email");
@@ -30,7 +27,6 @@ export async function POST(request: Request) {
     fullName = params.get("fullName");
   }
 
-  console.log("email: ", email);
   if (!email || !password || !fullName) {
     return NextResponse.json(
       { error: "Email, fullName and password are required" },

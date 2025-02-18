@@ -11,7 +11,6 @@ export default async function seed() {
       latitude: faker.location.latitude(),
       longitude: faker.location.longitude(),
       totalPlaces: faker.number.int({ min: 50, max: 200 }),
-      freePlaces: faker.number.int({ min: 0, max: 50 }),
       price: parseFloat(faker.commerce.price({ min: 1, max: 20, dec: 2 })),
       rating: parseFloat(
         faker.number.float({ min: 1, max: 5, fractionDigits: 1 }).toFixed(1)

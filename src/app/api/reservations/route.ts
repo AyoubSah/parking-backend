@@ -8,8 +8,6 @@ export async function POST(request: Request) {
     const { token, parkingId, startDate, endDate, startTime, endTime } = await request.json();
     if (!token)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      
-    console.log("Creating reservation:", { parkingId, startDate, endDate, startTime, endTime });
     
     // Authenticate the user
     const user = await getUserFromToken(token);
@@ -27,6 +25,26 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    
+    // Get parking details including totalPlaces
+    const parking = await prisma.parking.findUnique({
+      where: { id: parseInt(parkingId, 10) },
+      select: { totalPlaces: true, parkingName: true, photoUrl: true, address: true }
+    });
+    if (!parking)
+      return NextResponse.json({ error: "Parking not found" }, { status: 404 });
+      
+    // Check if overlapping reservations equal the parking capacity
+    const overlappingCount = await prisma.reservation.count({
+      where: {
+        parkingId: parseInt(parkingId, 10),
+        startTime: { lt: computedEnd },
+        endTime: { gt: computedStart }
+      }
+    });
+    if (overlappingCount >= parking.totalPlaces) {
+      return NextResponse.json({ error: "The parking is full on the selected period" }, { status: 400 });
+    }
 
     // Create the reservation entry without startDate and endDate
     const reservation = await prisma.reservation.create({
@@ -37,26 +55,15 @@ export async function POST(request: Request) {
         endTime: computedEnd,
       },
     });
-    console.log("Reservation created:", reservation);
 
-    // Fetch additional parking details
-    const parking = await prisma.parking.findUnique({
-      where: { id: parseInt(parkingId, 10) },
-      select: {
-        parkingName: true,
-        photoUrl: true,
-        address: true,
-      },
-    });
-
-    // Return response including the original startDate and endDate from input
+    // Return response including the original startDate and endDate from input and parking details
     return NextResponse.json({
       ...reservation,
       startDate, // provided date portion for start
       endDate,   // provided date portion for end
-      parkingName: parking?.parkingName,
-      parkingPhotoUrl: parking?.photoUrl,
-      parkingAddress: parking?.address,
+      parkingName: parking.parkingName,
+      parkingPhotoUrl: parking.photoUrl,
+      parkingAddress: parking.address,
     });
   } catch (error) {
     if (error instanceof Error) {
