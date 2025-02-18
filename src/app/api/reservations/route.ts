@@ -13,11 +13,16 @@ export async function POST(request: Request) {
     const user = await getUserFromToken(token);
     if (!user)
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-
+     console.log(`${startDate}T${startTime}Z`)
     // Build complete datetime objects for startTime and endTime using the provided dates and times
     const computedStart = new Date(`${startDate}T${startTime}Z`);
     const computedEnd = new Date(`${endDate}T${endTime}Z`);
 
+    // Validate that computed dates are valid
+    if (isNaN(computedStart.getTime()) || isNaN(computedEnd.getTime())) {
+      return NextResponse.json({ error: "Invalid date/time format" }, { status: 400 });
+    }
+    
     // Validate datetime ranges
     if (computedStart >= computedEnd) {
       return NextResponse.json(
