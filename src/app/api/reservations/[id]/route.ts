@@ -5,11 +5,12 @@ import { getUserFromToken } from "@/lib/auth";
 // GET reservation by id including parking details
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   try {
     const reservation = await prisma.reservation.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         parking: {
           select: {
@@ -35,8 +36,9 @@ export async function GET(
 // PUT update reservation endpoint with date calculation
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = await context.params;
   try {
     const { token, startDate, endDate, startTime, endTime, ...otherData } =
       await request.json();
@@ -57,6 +59,7 @@ export async function PUT(
       const computedEnd = new Date(`${endDate}T${endTime}Z`);
 
       if (isNaN(computedStart.getTime()) || isNaN(computedEnd.getTime())) {
+        console.log("NaN");
         return NextResponse.json(
           { error: "Invalid date/time format" },
           { status: 400 }
@@ -76,7 +79,7 @@ export async function PUT(
     }
 
     const updatedReservation = await prisma.reservation.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
     return NextResponse.json(updatedReservation);
@@ -88,8 +91,9 @@ export async function PUT(
 // DELETE reservation endpoint
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   try {
     const { token } = await request.json();
     if (!token) {
@@ -101,7 +105,7 @@ export async function DELETE(
     }
 
     await prisma.reservation.delete({
-      where: { id: params.id },
+      where: { id },
     });
     return NextResponse.json({ message: "Reservation deleted" });
   } catch (error) {
