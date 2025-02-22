@@ -32,13 +32,15 @@ export async function GET(
   }
 }
 
-// PUT update reservation endpoint
+// PUT update reservation endpoint with date calculation
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { token, ...updateData } = await request.json();
+    const { token, startDate, endDate, startTime, endTime, ...otherData } =
+      await request.json();
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -47,11 +49,35 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
+    let updateData = { ...otherData };
+
+    // If date/time fields are provided, calculate computedStart and computedEnd
+    if (startDate && endDate && startTime && endTime) {
+      const computedStart = new Date(`${startDate}T${startTime}Z`);
+      const computedEnd = new Date(`${endDate}T${endTime}Z`);
+
+      if (isNaN(computedStart.getTime()) || isNaN(computedEnd.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid date/time format" },
+          { status: 400 }
+        );
+      }
+      if (computedStart >= computedEnd) {
+        return NextResponse.json(
+          { error: "Invalid date/time range" },
+          { status: 400 }
+        );
+      }
+      updateData = {
+        ...updateData,
+        startTime: computedStart,
+        endTime: computedEnd,
+      };
+    }
+
     const updatedReservation = await prisma.reservation.update({
       where: { id: params.id },
-      data: {
-        ...updateData,
-      },
+      data: updateData,
     });
     return NextResponse.json(updatedReservation);
   } catch (error) {

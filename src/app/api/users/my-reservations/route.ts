@@ -42,6 +42,7 @@ export async function POST(request: Request) {
       };
     });
     
+
     return NextResponse.json(mappedReservations);
   } catch (error) {
     if (error instanceof Error) {
