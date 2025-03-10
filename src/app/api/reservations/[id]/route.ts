@@ -5,12 +5,11 @@ import { getUserFromToken } from "@/lib/auth";
 // GET reservation by id including parking details
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
   try {
     const reservation = await prisma.reservation.findUnique({
-      where: { id },
+      where: { id: params.id },
       include: {
         parking: {
           select: {
@@ -33,7 +32,7 @@ export async function GET(
   }
 }
 
-// PUT update reservation endpoint with date calculation
+// PUT update reservation endpoint with date calculation, parking info, and custom time formatting in response
 export async function PUT(
   request: Request,
   context: { params: { id: string } }
@@ -42,7 +41,6 @@ export async function PUT(
   try {
     const { token, startDate, endDate, startTime, endTime, ...otherData } =
       await request.json();
-
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -50,16 +48,12 @@ export async function PUT(
     if (!user) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
-
     let updateData = { ...otherData };
-
-    // If date/time fields are provided, calculate computedStart and computedEnd
+    // Calculate computedStart and computedEnd if date/time provided
     if (startDate && endDate && startTime && endTime) {
       const computedStart = new Date(`${startDate}T${startTime}Z`);
       const computedEnd = new Date(`${endDate}T${endTime}Z`);
-
       if (isNaN(computedStart.getTime()) || isNaN(computedEnd.getTime())) {
-        console.log("NaN");
         return NextResponse.json(
           { error: "Invalid date/time format" },
           { status: 400 }
@@ -77,12 +71,43 @@ export async function PUT(
         endTime: computedEnd,
       };
     }
-
     const updatedReservation = await prisma.reservation.update({
       where: { id },
       data: updateData,
+      include: {
+        parking: {
+          select: {
+            id: true,
+            parkingName: true,
+            photoUrl: true,
+            address: true,
+          },
+        },
+      },
     });
-    return NextResponse.json(updatedReservation);
+    const parking = await prisma.parking.findUnique({
+      where: { id: updatedReservation.parking.id },
+      select: {
+        parkingName: true,
+        photoUrl: true,
+        address: true,
+      },
+    });
+    if (!parking)
+      return NextResponse.json({ error: "Parking not found" }, { status: 404 });
+    // Overwrite the startTime and endTime in the returned object with the original HH:mm values
+    updatedReservation.startTime = startTime;
+    updatedReservation.endTime = endTime;
+    // Include the original startDate and endDate in the updated reservation object
+    return NextResponse.json({
+      ...updatedReservation,
+      startDate, // provided date portion for start
+      endDate,
+      userId: user.id, // provided date portion for end
+      parkingName: parking.parkingName,
+      parkingPhotoUrl: parking.photoUrl,
+      parkingAddress: parking.address,
+    });
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });
   }

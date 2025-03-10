@@ -9,15 +9,18 @@ export async function GET() {
     }
     const now = new Date();
     const parkingsWithFreePlaces = await Promise.all(
-      parkings.map(async parking => {
+      parkings.map(async (parking) => {
         const activeReservations = await prisma.reservation.count({
           where: {
             parkingId: parking.id,
             startTime: { lte: now },
-            endTime: { gte: now }
-          }
+            endTime: { gte: now },
+          },
         });
-        return { ...parking, freePlaces: parking.totalPlaces - activeReservations };
+        return {
+          ...parking,
+          freePlaces: parking.totalPlaces - activeReservations,
+        };
       })
     );
     return NextResponse.json(parkingsWithFreePlaces);
