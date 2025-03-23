@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get parking details including totalPlaces
+    // Get parking details including totalPlaces and price
     const parking = await prisma.parking.findUnique({
       where: { id: parseInt(parkingId, 10) },
       select: {
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
         parkingName: true,
         photoUrl: true,
         address: true,
+        price: true, // Add price to selection
       },
     });
     if (!parking)
@@ -63,7 +64,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create the reservation entry without startDate and endDate
+    // Calculate cost based on hours and price per hour
+    const hours = Math.ceil((computedEnd.getTime() - computedStart.getTime()) / (1000 * 60 * 60));
+    const cost = hours * parking.price;
+
+    // Create the reservation entry with cost
     const reservation = await prisma.reservation.create({
       data: {
         parkingId: parseInt(parkingId, 10),
@@ -81,6 +86,7 @@ export async function POST(request: Request) {
       parkingName: parking.parkingName,
       parkingPhotoUrl: parking.photoUrl,
       parkingAddress: parking.address,
+      cost: cost,
     });
   } catch (error) {
     if (error instanceof Error) {

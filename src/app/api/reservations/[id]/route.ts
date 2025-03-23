@@ -49,6 +49,27 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
     let updateData = { ...otherData };
+    
+    // Get the parking details to access price
+    const existingReservation = await prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        parking: {
+          select: {
+            id: true,
+            parkingName: true,
+            photoUrl: true,
+            address: true,
+            price: true,
+          },
+        },
+      },
+    });
+
+    if (!existingReservation || !existingReservation.parking) {
+      return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
+    }
+
     // Calculate computedStart and computedEnd if date/time provided
     if (startDate && endDate && startTime && endTime) {
       const computedStart = new Date(`${startDate}T${startTime}Z`);
@@ -65,10 +86,16 @@ export async function PUT(
           { status: 400 }
         );
       }
+
+      // Calculate new cost based on updated duration
+      const hours = Math.ceil((computedEnd.getTime() - computedStart.getTime()) / (1000 * 60 * 60));
+      const cost = hours * existingReservation.parking.price;
+
       updateData = {
         ...updateData,
         startTime: computedStart,
         endTime: computedEnd,
+        cost: cost,
       };
     }
     const updatedReservation = await prisma.reservation.update({
