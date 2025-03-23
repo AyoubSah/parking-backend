@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma/client";
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const id = parseInt(params.id);
     if (isNaN(id))
@@ -36,7 +36,7 @@ export async function GET(
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const id = parseInt(params.id);
     if (isNaN(id))
@@ -57,7 +57,7 @@ export async function PUT(
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const id = parseInt(params.id);
     if (isNaN(id))
