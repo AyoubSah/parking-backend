@@ -134,6 +134,7 @@ export async function PUT(
       parkingName: parking.parkingName,
       parkingPhotoUrl: parking.photoUrl,
       parkingAddress: parking.address,
+      cost: updatedReservation.cost,
     });
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });

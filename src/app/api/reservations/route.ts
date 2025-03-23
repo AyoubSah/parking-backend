@@ -75,6 +75,7 @@ export async function POST(request: Request) {
         userId: user.id,
         startTime: computedStart,
         endTime: computedEnd,
+        cost: cost,
       },
     });
 
