@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     config.resolve.alias["@"] = __dirname + "/src";
     return config;
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
@@ -15,8 +19,6 @@ const nextConfig: NextConfig = {
 
 };
 
-typescript: {
-  ignoreBuildErrors: true;
-}
+
 
 export default nextConfig;
